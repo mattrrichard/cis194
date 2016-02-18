@@ -1,8 +1,11 @@
+{-# LANGUAGE FlexibleInstances #-}
 module JoinList where
 
 import Data.Monoid
 import Sized
 import Scrabble
+import Buffer
+import Editor
 
 data JoinList m a
   = Empty
@@ -22,6 +25,7 @@ tag :: Monoid m => JoinList m a -> m
 tag Empty = mempty
 tag (Single m _) = m
 tag (Append m _ _) = m
+
 
 sizedTag :: (Sized m, Monoid m) => JoinList m a -> Int
 sizedTag = getSize . size . tag
@@ -62,5 +66,33 @@ takeJ n (Append _ l r)
   | otherwise = takeJ n l
   where lSize = sizedTag l
 
+
 scoreLine :: String -> JoinList Score String
 scoreLine s = Single (scoreString s) s
+
+
+instance Buffer (JoinList (Score, Size) String) where
+  toString Empty = ""
+  toString (Single _ s) = s
+  toString (Append _ l r) = toString l ++ toString r
+
+  -- TODO: this could probably stand to at least attempt to make a balanced join tree
+  -- currently it's hardly better than a linked list
+  fromString = foldr ((+++) . single) Empty . lines
+    where single s = Single (scoreString s, 1) s
+
+  line = indexJ
+  replaceLine n l b
+    | n >= 0 && n < sizedTag b = takeJ n b +++ fromString  l +++ dropJ (n+1) b
+    | otherwise = b
+
+  numLines = sizedTag
+
+  value Empty = 0
+  value (Single (Score s, _) _) = s
+  value (Append (Score s, _) _ _) = s
+
+
+main :: IO ()
+main =
+  runEditor editor (Empty :: JoinList (Score, Size) String)
