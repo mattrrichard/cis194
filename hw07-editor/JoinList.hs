@@ -70,15 +70,28 @@ takeJ n (Append _ l r)
 scoreLine :: String -> JoinList Score String
 scoreLine s = Single (scoreString s) s
 
+-- this probably sucks and definitely needs a refactor
+balance :: (Sized b, Monoid b) => JoinList b a -> JoinList b a
+balance Empty = Empty
+balance jl@(Single _ _) = jl
+balance jl@(Append m l r)
+  | diff <= 1 = jl
+  | sizeL < sizeR = recurse $ Append m (l +++ takeJ diff2 r) (dropJ diff2 r)
+  | otherwise = recurse $ Append m (takeJ diffL l) (dropJ diffL l +++ r)
+  where
+    sizeL = sizedTag l
+    sizeR = sizedTag r
+    diff = abs (sizeL - sizeR)
+    diff2 = diff `div` 2
+    diffL = sizeL - diff2
+    recurse (Append _ l' r') = Append m (balance l') (balance r')
 
 instance Buffer (JoinList (Score, Size) String) where
   toString Empty = ""
   toString (Single _ s) = s
   toString (Append _ l r) = toString l ++ toString r
 
-  -- TODO: this could probably stand to at least attempt to make a balanced join tree
-  -- currently it's hardly better than a linked list
-  fromString = foldr ((+++) . single) Empty . lines
+  fromString = balance . foldr ((+++) . single) Empty . lines
     where single s = Single (scoreString s, 1) s
 
   line = indexJ
