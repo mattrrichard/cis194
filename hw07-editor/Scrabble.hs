@@ -1,6 +1,7 @@
  {-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleInstances #-}
 module Scrabble where
 
+import Data.Char
 
 newtype Score = Score Int
   deriving (Eq, Ord, Show, Num)
@@ -13,14 +14,15 @@ instance Monoid Score where
 
 score :: Char -> Score
 score c
-  | c `elem` "aeioulnrst" = 1
-  | c `elem` "dg" = 2
-  | c `elem` "bcmp" = 3
-  | c `elem` "fhvwy" = 4
-  | c == 'k' = 5
-  | c `elem` "jx" = 8
-  | c `elem` "qz" = 10
+  | ielem "aeioulnrst" = 1
+  | ielem "dg" = 2
+  | ielem "bcmp" = 3
+  | ielem "fhvwy" = 4
+  | ielem "k" = 5
+  | ielem "jx" = 8
+  | ielem "qz" = 10
   | otherwise = 0
+  where ielem cs = toLower c `elem` cs
 
 
 scoreString :: String -> Score
