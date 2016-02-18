@@ -1,9 +1,8 @@
 module JoinList where
 
 import Data.Monoid
--- import Buffer
 import Sized
--- import Editor
+import Scrabble
 
 data JoinList m a
   = Empty
@@ -63,3 +62,5 @@ takeJ n (Append _ l r)
   | otherwise = takeJ n l
   where lSize = sizedTag l
 
+scoreLine :: String -> JoinList Score String
+scoreLine s = Single (scoreString s) s
