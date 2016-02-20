@@ -45,3 +45,14 @@ nextLevel e gls =
 maxFun :: Tree Employee -> GuestList
 maxFun =
   uncurry moreFun . treeFold nextLevel
+
+
+main :: IO ()
+main =
+  readFile "company.txt" >>= putStr . guestListToString . maxFun . read
+
+
+guestListToString :: GuestList -> String
+guestListToString (GL gl fun) =
+  "Total fun: " ++ show fun ++ "\n" ++
+     unlines (map empName gl)
