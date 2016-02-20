@@ -14,6 +14,7 @@ import           Data.Char
 -- the input.
 newtype Parser a = Parser { runParser :: String -> Maybe (a, String) }
 
+
 -- For example, 'satisfy' takes a predicate on Char, and constructs a
 -- parser which succeeds only if it sees a Char that satisfies the
 -- predicate (which it then returns).  If it encounters a Char that
@@ -57,3 +58,32 @@ posInt = Parser f
 ------------------------------------------------------------
 -- Your code goes below here
 ------------------------------------------------------------
+
+first :: (a->b) -> (a, c) -> (b, c)
+first f (x, y)= (f x, y)
+
+
+instance Functor Parser  where
+  fmap f p = Parser $ fmap (first f) . runParser p
+
+
+instance Applicative Parser where
+  pure x = Parser const'
+    where const' s = Just (x, s)
+
+  (<*>) p1 p2 =
+    let
+      chain input =
+        case runParser p1 input of
+          Nothing -> Nothing
+          Just (f, rest) -> first f <$> runParser p2 rest
+    in
+      Parser chain
+
+
+abParser :: Parser (Char, Char)
+abParser = (,) <$> char 'a' <*> char 'b'
+
+abParser_ :: Parser ()
+abParser_ = const2 ()  <$> char 'a' <*> char 'b'
+  where const2 z _ _ = z
