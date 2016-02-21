@@ -1,4 +1,4 @@
-module Golf where
+module CodeGolf where
 
 skip :: [a] -> Int -> [a]
 skip (x:xs) n =
